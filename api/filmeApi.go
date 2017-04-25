@@ -1,26 +1,38 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/fabianocostaalvarenga/filmes/db"
+	"github.com/fabianocostaalvarenga/filmes/filmes"
 	"net/http"
 )
 
 type FilmePostHandler struct{}
 
 func (h *FilmePostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//params := httptreemux.ContextParams(r.Context())
-	//fmt.Fprintf(w, "Eu deveria criar um carro chamado: %s!", params["id"])
-	fmt.Fprintln(w, "Criar POST")
+
+	filme := &filmes.Filme{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(filme)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	repository := db.NewFilmeRepository()
+
+	repository.Create(filme)
+
 }
 
 type FilmePutHandler struct{}
 
 func (h *FilmePutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//params := httptreemux.ContextParams(r.Context())
-	//fmt.Fprintf(w, "Eu deveria busca um carro chamado: %s!", params["id"])
+
 	fmt.Fprintln(w, "Alterar PUT")
 }
 
@@ -31,9 +43,12 @@ func (d *FilmeDeleteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	repository := db.NewFilmeRepository()
 
-	repository.Remove(params["id"])
+	err := repository.Remove(params["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 
-	fmt.Fprintln(w, "Deletar DELETE = ", params["id"])
 }
 
 type FilmeGetOneHandler struct{}
@@ -43,19 +58,43 @@ func (d *FilmeGetOneHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	repository := db.NewFilmeRepository()
 
-	repository.FindById(params["id"])
+	filme, err := repository.FindById(params["id"])
 
-	fmt.Fprintln(w, "Obter 1 GET = ", params["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+	encodeErr := encoder.Encode(filme)
+	if encodeErr != nil {
+		http.Error(w, encodeErr.Error(), http.StatusInternalServerError)
+		fmt.Fprintln(w, "Erro ao encodar o Json...")
+		return
+	}
+
 }
 
 type FilmeGetAllHandler struct{}
 
 func (d *FilmeGetAllHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//params := httptreemux.ContextParams(r.Context())
 
 	repository := db.NewFilmeRepository()
 
-	repository.FindAll()
+	filmes, repositoryErr := repository.FindAll()
 
-	fmt.Fprintln(w, "Obter Todos GET")
+	if repositoryErr != nil {
+		http.Error(w, repositoryErr.Error(), http.StatusInternalServerError)
+		fmt.Fprintln(w, "Erro ao recuperar todos os registros...")
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+	encodeErr := encoder.Encode(filmes)
+	if encodeErr != nil {
+		http.Error(w, encodeErr.Error(), http.StatusInternalServerError)
+		fmt.Fprintln(w, "Erro ao encodar Json...")
+		return
+	}
+
 }

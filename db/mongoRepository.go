@@ -4,16 +4,10 @@ import (
 	"errors"
 	"log"
 
+	"github.com/fabianocostaalvarenga/filmes/filmes"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	//"github.com/fabianocostaalvarenga/filmes/filmes"
 )
-
-type Filme struct {
-	Id   string `bson:"_id"`
-	Name string `bson:"name"`
-	Ano  int64  `bson:ano`
-}
 
 const FilmeCollection = "filme"
 
@@ -23,7 +17,7 @@ type FilmeRepository struct {
 	session *mgo.Session
 }
 
-func (r *FilmeRepository) Create(p *Filme) error {
+func (r *FilmeRepository) Create(p *filmes.Filme) error {
 	session := r.session.Clone()
 	defer session.Close()
 
@@ -37,7 +31,7 @@ func (r *FilmeRepository) Create(p *Filme) error {
 	return err
 }
 
-func (r *FilmeRepository) Update(p *Filme) error {
+func (r *FilmeRepository) Update(p *filmes.Filme) error {
 	session := r.session.Clone()
 	defer session.Close()
 
@@ -66,7 +60,7 @@ func (r *FilmeRepository) Remove(id string) error {
 	return err
 }
 
-func (r *FilmeRepository) FindAll() ([]*Filme, error) {
+func (r *FilmeRepository) FindAll() ([]*filmes.Filme, error) {
 
 	log.Println("Recuperando todos os usuários...")
 
@@ -75,7 +69,7 @@ func (r *FilmeRepository) FindAll() ([]*Filme, error) {
 
 	collection := session.DB("").C(FilmeCollection)
 
-	documents := make([]*Filme, 0)
+	documents := make([]*filmes.Filme, 0)
 
 	err := collection.Find(nil).All(&documents)
 
@@ -88,7 +82,7 @@ func (r *FilmeRepository) FindAll() ([]*Filme, error) {
 	return documents, err
 }
 
-func (r *FilmeRepository) FindById(id string) (*Filme, error) {
+func (r *FilmeRepository) FindById(id string) (*filmes.Filme, error) {
 
 	log.Println("Buscando usuario " + id)
 
@@ -98,7 +92,7 @@ func (r *FilmeRepository) FindById(id string) (*Filme, error) {
 	collection := session.DB("").C(FilmeCollection)
 	query := bson.M{"_id": id}
 
-	filme := &Filme{}
+	filme := &filmes.Filme{}
 
 	err := collection.Find(query).One(filme)
 

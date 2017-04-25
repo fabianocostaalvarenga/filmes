@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"errors"
 	"log"
 
 	"github.com/dimfeld/httptreemux"
